@@ -16,7 +16,7 @@ class DatabaseTool{
   final String columnName = "sensorName";
   final String columnType = "sensorType";
   final String columnRoomId = "parentRoom";
-  final String coulmnDescription = "descripyion";
+  final String coulmnDescription = "description";
 
   Future get db async{
 
@@ -39,7 +39,7 @@ class DatabaseTool{
   }
 
   FutureOr<void> onCreateDB(Database db,int version) async{
-    await db.execute(''''
+    await db.execute('''
     create table $tableName(
       $columnId integer primary key,
       $columnName text not null,

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:thereiot/page/sensorManagePage.dart';
 
 void main() {
   runApp(MyApp());
@@ -85,6 +86,16 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
         centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: (){
+              Navigator.push(context, new MaterialPageRoute(
+                builder: (BuildContext context)=>new SensorManagePage()
+              ));
+            },
+          ),
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
