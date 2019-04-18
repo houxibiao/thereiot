@@ -9,8 +9,9 @@ class SensorManagePage extends StatefulWidget {
 }
 
 class _SensorManagePageState extends State<SensorManagePage> {
-  List<SensorEntity> sensorlist = new List<SensorEntity>();
-  bool isExpanded;
+  //List<SensorEntity> sensorlist = new List<SensorEntity>();
+  List<SensorInfoBean> sensorInfoList = new List<SensorInfoBean>();
+  int currentIndex = 0;
 
   @override
   void initState() {
@@ -23,55 +24,64 @@ class _SensorManagePageState extends State<SensorManagePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("传感器列表"),
-
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Container(
             padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
             child: Center(
               child: FlatButton(
-                color: Colors.white30,
+                color: Colors.lightBlue,
                 textColor: Colors.black45,
                 child: Text("添加传感器"),
-                onPressed: ()=>Navigator.push(context, new MaterialPageRoute(
-                  builder: (BuildContext context)=>new AddSensorPage()
-                )),
+                onPressed: () => Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            new AddSensorPage())),
               ),
             ),
           ),
-          sensorlist.isEmpty
+          sensorInfoList.isEmpty
               ? Container(
                   child: Center(
                     child: Text("空"),
                   ),
                 )
               : ExpansionPanelList(
-                  children: sensorlist.map((item) {
+                  expansionCallback: (index, bol) {
+                    _setCurrentIndex(index, bol);
+                  },
+                  children: sensorInfoList.map((item) {
                     return ExpansionPanel(
-                      isExpanded: true,
-                      headerBuilder: (context,isExpanded){
+                      isExpanded: item.expandedState,
+                      headerBuilder: (context, isExpanded) {
                         return new ListTile(
-                          title: Text(item.sensorName),
+                          title: Text(item.sensor.sensorName),
                         );
                       },
-                      body:  new Padding(
+                      body: new Padding(
                         padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          textDirection: TextDirection.ltr,
                           children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                Text("sensorId:${item.sensorId}"),
-                                Text("RoomId:${item.parentRoom}"),
-                              ],
+                            Text("sensorId:${item.sensor.sensorId}"),
+                            SizedBox(
+                              height: 10,
                             ),
-                            SizedBox(height: 10,),
-                            Text("sensorType:${item.sensorType}"),
-                            SizedBox(height: 10,),
-                            Text(item.description),
-                            SizedBox(height: 10,),
+                            Text("RoomId:${item.sensor.parentRoom}"),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text("sensorType:${item.sensor.sensorType}"),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(item.sensor.description),
+                            SizedBox(
+                              height: 10,
+                            ),
                           ],
                         ),
                       ),
@@ -86,8 +96,11 @@ class _SensorManagePageState extends State<SensorManagePage> {
   loadSensorList() async {
     DatabaseTool database = new DatabaseTool();
     List templist = await database.getSensorList();
-    sensorlist.clear();
-    templist.forEach((item) => sensorlist.add(SensorEntity.fromMap(item)));
+    sensorInfoList.clear();
+    templist.forEach((item) {
+      //sensorlist.add(SensorEntity.fromMap(item));
+      sensorInfoList.add(SensorInfoBean(SensorEntity.fromMap(item), false));
+    });
     if (templist.isEmpty) {
       print("传感器列表为空");
     }
@@ -95,12 +108,16 @@ class _SensorManagePageState extends State<SensorManagePage> {
     await database.close();
   }
 
-  _expandedCallback(int index,bool isExpanded){
+  _setCurrentIndex(int index, bool isExpanded) {
     setState(() {
-     if(this.isExpanded==isExpanded){
-       this.isExpanded=!isExpanded;
-     } 
+      currentIndex = index;
+      sensorInfoList[index].expandedState = !isExpanded;
     });
   }
+}
 
+class SensorInfoBean {
+  SensorEntity sensor;
+  bool expandedState;
+  SensorInfoBean(this.sensor, this.expandedState);
 }

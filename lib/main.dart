@@ -90,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: (){
+              timer.cancel();
               Navigator.push(context, new MaterialPageRoute(
                 builder: (BuildContext context)=>new SensorManagePage()
               ));
