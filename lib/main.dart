@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:thereiot/page/sensorManagePage.dart';
+import 'package:thereiot/page/homePage.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,7 +14,7 @@ void main() {
         SystemUiOverlayStyle(statusBarColor: Colors.transparent);
     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   }
-} 
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -89,19 +90,19 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.menu),
-            onPressed: (){
+            onPressed: () {
               timer.cancel();
-              Navigator.push(context, new MaterialPageRoute(
-                builder: (BuildContext context)=>new SensorManagePage()
-              ));
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (BuildContext context) =>
+                          new SensorManagePage()));
             },
           ),
         ],
       ),
       body: Center(
-        
         child: Column(
-          
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
@@ -111,6 +112,14 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            RaisedButton(
+              child: Text("homepage"),
+              onPressed: () => Navigator.push(
+                    context,
+                    new MaterialPageRoute(
+                        builder: (BuildContext context) => new HomePage()),
+                  ),
+            )
           ],
         ),
       ),
@@ -122,53 +131,46 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-_getData() async{
-
+  _getData() async {
     var url = "http://123.56.20.55:8086/query?u=hou&p=Hou13734&db=yuntest";
-    var response = await http.post(url,body:{'q':'select last(fieldvalue0),fieldvalue1,fieldvalue2,sensorType from room34563 group by sensorId'});
+    var response = await http.post(url, body: {
+      'q':
+          'select last(fieldvalue0),fieldvalue1,fieldvalue2,sensorType from room34563 group by sensorId'
+    });
 
-    if(response.statusCode==200){
+    if (response.statusCode == 200) {
+      Map<String, dynamic> result = json.decode(response.body);
 
-      Map<String,dynamic> result = json.decode(response.body);
-
-      for(dynamic data in result['results'][0]['series']){
-
-        if(data['values'][0][4]=="ds18b20"){
-          print("传感器类型:ds18b20,更新时间: ${data['values'][0][0]},温度: ${data['values'][0][1]}");
-        }else if(data['values'][0][4]=='dht11'){
-          print("传感器类型:dht11,更新时间: ${data['values'][0][0]},温度:${data['values'][0][1]},湿度:${data['values'][0][2]}%");
-        }else if(data['values'][0][4]=='mpu6050'){
-          print("传感器类型:mpu6050,更新时间: ${data['values'][0][0]},x轴:${data['values'][0][1]},y轴:${data['values'][0][2]},z轴:${data['values'][0][3]}");
-        }else{
-
-          print("传感器类型:${data['values'][0][4]}(未知类型),更新时间: ${data['values'][0][0]},fieldvalue0:${data['values'][0][1]},fieldvalue1:${data['values'][0][2]},fieldvalue2:${data['values'][0][3]}");
+      for (dynamic data in result['results'][0]['series']) {
+        if (data['values'][0][4] == "ds18b20") {
+          print(
+              "传感器类型:ds18b20,更新时间: ${data['values'][0][0]},温度: ${data['values'][0][1]}");
+        } else if (data['values'][0][4] == 'dht11') {
+          print(
+              "传感器类型:dht11,更新时间: ${data['values'][0][0]},温度:${data['values'][0][1]},湿度:${data['values'][0][2]}%");
+        } else if (data['values'][0][4] == 'mpu6050') {
+          print(
+              "传感器类型:mpu6050,更新时间: ${data['values'][0][0]},x轴:${data['values'][0][1]},y轴:${data['values'][0][2]},z轴:${data['values'][0][3]}");
+        } else {
+          print(
+              "传感器类型:${data['values'][0][4]}(未知类型),更新时间: ${data['values'][0][0]},fieldvalue0:${data['values'][0][1]},fieldvalue1:${data['values'][0][2]},fieldvalue2:${data['values'][0][3]}");
         }
-
       }
-
-    }else{
+    } else {
       print("获取失败,错误码为:${response.statusCode}");
     }
-
   }
 
-  _reflashData() async{
-
-    if(timer==null){
+  _reflashData() async {
+    if (timer == null) {
       timer = Timer.periodic(Duration(seconds: 15), (as) async {
-
         DateTime datetime = DateTime.now();
         print("获取新的数据,现在的时间是$datetime");
 
         await _getData();
 
-        setState(() {
-          
-        });
-
+        setState(() {});
       });
     }
-
   }
-
 }

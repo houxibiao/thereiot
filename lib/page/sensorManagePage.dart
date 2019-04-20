@@ -36,57 +36,64 @@ class _SensorManagePageState extends State<SensorManagePage> {
                 bottom: 80,
                 top: 0,
                 child: ListView(
-                shrinkWrap: true,
-                children: <Widget>[
-                  sensorInfoList.isEmpty
-                      ? Container(
-                          child: Center(
-                            child: Text("空"),
-                          ),
-                        )
-                      : ExpansionPanelList(
-                          expansionCallback: (index, bol) {
-                            _setCurrentIndex(index, bol);
-                          },
-                          children: sensorInfoList.map((item) {
-                            return ExpansionPanel(
-                              isExpanded: item.expandedState,
-                              headerBuilder: (context, isExpanded) {
-                                return new ListTile(
-                                  title: Text(item.sensor.sensorName),
-                                );
-                              },
-                              body: new Padding(
-                                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  textDirection: TextDirection.ltr,
-                                  children: <Widget>[
-                                    Text("sensorId:${item.sensor.sensorId}"),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text("RoomId:${item.sensor.parentRoom}"),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text(
-                                        "sensorType:${item.sensor.sensorType}"),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text(item.sensor.description),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                  ],
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    sensorInfoList.isEmpty
+                        ? Container(
+                            child: Center(
+                              child: Text("空"),
+                            ),
+                          )
+                        : ExpansionPanelList(
+                            expansionCallback: (index, bol) {
+                              _setCurrentIndex(index, bol);
+                            },
+                            children: sensorInfoList.map((item) {
+                              return ExpansionPanel(
+                                isExpanded: item.expandedState,
+                                headerBuilder: (context, isExpanded) {
+                                  return new ListTile(
+                                    title: Text(item.sensor.sensorName),
+                                  );
+                                },
+                                body: new Padding(
+                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: <Widget>[
+                                      Text("sensorId:${item.sensor.sensorId}"),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text("RoomId:${item.sensor.parentRoom}"),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(
+                                          "sensorType:${item.sensor.sensorType}"),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(item.sensor.description),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Center(
+                                        child: RaisedButton(
+                                          child: Text("删除"),
+                                          onPressed: () => _deleteSensorById(
+                                              item.sensor.sensorId),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                ],
-              ),
+                              );
+                            }).toList(),
+                          ),
+                  ],
+                ),
               ),
               Positioned(
                 bottom: 0,
@@ -95,9 +102,7 @@ class _SensorManagePageState extends State<SensorManagePage> {
                 child: Container(
                   padding: EdgeInsets.fromLTRB(10, 20, 10, 15),
                   child: Center(
-                    child: FlatButton(
-                      color: Colors.lightBlue,
-                      textColor: Colors.black45,
+                    child: RaisedButton(
                       child: Text("添加传感器"),
                       onPressed: () => Navigator.push(
                           context,
@@ -118,7 +123,6 @@ class _SensorManagePageState extends State<SensorManagePage> {
     List templist = await database.getSensorList();
     sensorInfoList.clear();
     templist.forEach((item) {
-      //sensorlist.add(SensorEntity.fromMap(item));
       sensorInfoList.add(SensorInfoBean(SensorEntity.fromMap(item), false));
     });
     if (templist.isEmpty) {
@@ -133,6 +137,14 @@ class _SensorManagePageState extends State<SensorManagePage> {
       currentIndex = index;
       sensorInfoList[index].expandedState = !isExpanded;
     });
+  }
+
+  _deleteSensorById(int sensorId) async {
+    DatabaseTool database = new DatabaseTool();
+    int result = await database.deleteSensor(sensorId);
+    print("删除了一个传感器,返回值:$result");
+    await database.close();
+    loadSensorList();
   }
 }
 
