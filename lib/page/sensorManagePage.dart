@@ -9,6 +9,7 @@ class SensorManagePage extends StatefulWidget {
 }
 
 class _SensorManagePageState extends State<SensorManagePage> {
+  
   List<SensorInfoBean> sensorInfoList = new List<SensorInfoBean>();
   int currentIndex = 0;
 

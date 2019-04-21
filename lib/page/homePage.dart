@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:thereiot/tool/database.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'package:thereiot/widget/sensorCardWidget.dart';
+import 'package:thereiot/page/sensorManagePage.dart';
+import 'dashBoardPage.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -22,6 +24,18 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("There IOT"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (BuildContext context) =>
+                          new SensorManagePage()));
+            },
+          ),
+        ],
       ),
       body: sensorlist.isEmpty
           ? Container(
@@ -32,7 +46,15 @@ class _HomePageState extends State<HomePage> {
               padding: EdgeInsets.all(10),
               childAspectRatio: 8.0 / 11.0,
               children: sensorlist.map((item) {
-                return SensorCardWidget(item);
+                return GestureDetector(
+                  child: SensorCardWidget(item),
+                  onTap: () => Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              new DashBoardPage(sensor: item))),
+                );
+                //return SensorCardWidget(item);
               }).toList(),
             ),
     );
