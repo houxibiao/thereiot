@@ -12,6 +12,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
   int _roomid;
   String _sensorName;
   String _sensorType;
+  int _fieldNum;
   String _description;
 
   final _formKey = new GlobalKey<FormState>();
@@ -47,6 +48,10 @@ class _AddSensorPageState extends State<AddSensorPage> {
               height: 20,
             ),
             initRoomId(),
+            SizedBox(
+              height: 20,
+            ),
+            initFieldNum(),
             SizedBox(
               height: 20,
             ),
@@ -116,6 +121,20 @@ class _AddSensorPageState extends State<AddSensorPage> {
     );
   }
 
+  TextFormField initFieldNum(){
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'fieldNum',
+      ),
+      onSaved: (String value)=>_fieldNum = int.parse(value),
+      validator: (String value){
+        if (!RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
+          return 'fieldNum必须为数字';
+        }
+      },
+    );
+  }
+
   TextFormField initSensorType() {
     return TextFormField(
       decoration: InputDecoration(
@@ -149,7 +168,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
             if (_formKey.currentState.validate()) {
               _formKey.currentState.save();
               SensorEntity sensor = new SensorEntity(
-                  _sensorId, _sensorName, _sensorType, _roomid,
+                  _sensorId, _sensorName, _sensorType, _roomid,_fieldNum,
                   description: _description);
               DatabaseTool database = new DatabaseTool();
               int result = await database.insertSensor(sensor);

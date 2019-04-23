@@ -16,6 +16,7 @@ class DatabaseTool{
   final String columnName = "sensorName";
   final String columnType = "sensorType";
   final String columnRoomId = "parentRoom";
+  final String columnFieldNum = "fieldNum";
   final String coulmnDescription = "description";
 
   Future get db async{
@@ -45,6 +46,7 @@ class DatabaseTool{
       $columnName text not null,
       $columnType text not null,
       $columnRoomId integer not null,
+      $columnFieldNum integer not null,
       $coulmnDescription text
     )
       '''

@@ -27,6 +27,8 @@ dependencies:
   sqflite: ^1.1.5
   path_provider: ^0.5.0+1
   charts_flutter: ^0.6.0
+  intl: ^0.15.8
+  loading: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +61,7 @@ flutter:
     - assets/switch.png
     - assets/temp_humi.png
     - assets/temperature.png
+    - assets/background.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
