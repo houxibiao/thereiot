@@ -3,7 +3,10 @@ import 'package:thereiot/tool/database.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'package:thereiot/widget/sensorCardWidget.dart';
 import 'package:thereiot/page/sensorManagePage.dart';
-import 'dashBoardPage.dart';
+import 'tempHumiSensorPage.dart';
+import 'tempSensorPage.dart';
+import 'gyroscopeSensorPage.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -37,26 +40,63 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: sensorlist.isEmpty
-          ? Container(
-              child: Text("空"),
-            )
-          : GridView.count(
-              crossAxisCount: 2,
-              padding: EdgeInsets.all(10),
-              childAspectRatio: 8.0 / 11.0,
-              children: sensorlist.map((item) {
-                return GestureDetector(
-                  child: SensorCardWidget(item),
-                  onTap: () => Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              new DashBoardPage(sensor: item))),
-                );
-                //return SensorCardWidget(item);
-              }).toList(),
-            ),
+      body: LiquidPullToRefresh(
+        backgroundColor: Color.fromRGBO(227, 242, 253, 40),
+        onRefresh: _refreshSensorList,
+        child: sensorlist.isEmpty
+            ? ListView(
+                children: <Widget>[
+                  Center(
+                    child: Text(
+                      "空",
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                  Center(
+                    child: Text("请添加传感器"),
+                  ),
+                ],
+              )
+            : GridView.count(
+                crossAxisCount: 2,
+                padding: EdgeInsets.all(10),
+                childAspectRatio: 8.0 / 11.0,
+                children: sensorlist.map((item) {
+                  return GestureDetector(
+                    child: SensorCardWidget(item),
+                    onTap: () {
+                      if (item.sensorType == "temp_humi") {
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                new TempHumiSensorPage(sensor: item),
+                          ),
+                        );
+                      } else if (item.sensorType == "temperature") {
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                new TempSensorPage(sensor: item),
+                          ),
+                        );
+                      } else if (item.sensorType == "gyroscope") {
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                new GyroscopeSensorPage(sensor: item),
+                          ),
+                        );
+                      } else {
+                        print("未添加类型");
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+      ),
     );
   }
 
@@ -70,5 +110,9 @@ class _HomePageState extends State<HomePage> {
     }
     setState(() {});
     await database.close();
+  }
+
+  Future<void> _refreshSensorList() async {
+    await _loadSensorList();
   }
 }

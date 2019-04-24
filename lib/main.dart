@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:thereiot/page/sensorManagePage.dart';
 import 'package:thereiot/page/homePage.dart';
 
 void main() {
@@ -25,136 +21,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.white,
       ),
+      debugShowCheckedModeBanner: false,
       home: HomePage(),//MyHomePage(title: 'There IOT'),
     );
-  }
-}
-
-//以下页面待删除
-class MyHomePage extends StatefulWidget {
-  
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  Timer timer;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    _reflashData();
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        centerTitle: true,
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              timer.cancel();
-              Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          new SensorManagePage()));
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            RaisedButton(
-              child: Text("homepage"),
-              onPressed: () => Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (BuildContext context) => new HomePage()),
-                  ),
-            )
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  _getData() async {
-    var url = "http://123.56.20.55:8086/query?u=hou&p=Hou13734&db=yuntest";
-    var response = await http.post(url, body: {
-      'q':
-          'select last(fieldvalue0),fieldvalue1,fieldvalue2,sensorType from room34563 group by sensorId'
-    });
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> result = json.decode(response.body);
-
-      for (dynamic data in result['results'][0]['series']) {
-        if (data['values'][0][4] == "ds18b20") {
-          print(
-              "传感器类型:ds18b20,更新时间: ${data['values'][0][0]},温度: ${data['values'][0][1]}");
-        } else if (data['values'][0][4] == 'dht11') {
-          print(
-              "传感器类型:dht11,更新时间: ${data['values'][0][0]},温度:${data['values'][0][1]},湿度:${data['values'][0][2]}%");
-        } else if (data['values'][0][4] == 'mpu6050') {
-          print(
-              "传感器类型:mpu6050,更新时间: ${data['values'][0][0]},x轴:${data['values'][0][1]},y轴:${data['values'][0][2]},z轴:${data['values'][0][3]}");
-        } else {
-          print(
-              "传感器类型:${data['values'][0][4]}(未知类型),更新时间: ${data['values'][0][0]},fieldvalue0:${data['values'][0][1]},fieldvalue1:${data['values'][0][2]},fieldvalue2:${data['values'][0][3]}");
-        }
-      }
-    } else {
-      print("获取失败,错误码为:${response.statusCode}");
-    }
-  }
-
-  _reflashData() async {
-    if (timer == null) {
-      timer = Timer.periodic(Duration(seconds: 15), (as) async {
-        DateTime datetime = DateTime.now();
-        print("获取新的数据,现在的时间是$datetime");
-
-        await _getData();
-
-        setState(() {});
-      });
-    }
   }
 }
