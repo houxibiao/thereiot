@@ -158,7 +158,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
     //获取指定传感器从该页面打开前2分钟到现在的数据
     DateTime time; //用于解析json数据里面的时间
     DateTime _dashtime =
-        DateTime.now().add(new Duration(minutes: -3, hours: -8));
+        DateTime.now().add(new Duration(minutes: -2, hours: -8));
     _dashtimeStr =
         "${_dashtime.year}-${_dashtime.month.toString().padLeft(2, '0')}-${_dashtime.day.toString().padLeft(2, '0')}T${_dashtime.hour.toString().padLeft(2, '0')}:${_dashtime.minute.toString().padLeft(2, '0')}:${_dashtime.second.toString().padLeft(2, '0')}Z";
 
@@ -170,6 +170,8 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
 
     if (response.statusCode == 200) {
       pointList0.clear();
+      pointList1.clear();
+      pointList2.clear();
 
       Map<String, dynamic> result = json.decode(response.body);
 
@@ -181,15 +183,15 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
           pointList0.add(TimeSeriesDoubleValue(
               new DateTime(time.year, time.month, time.day, time.hour,
                   time.minute, time.second),
-              data[1]));
+             double.parse(data[1].toString())));
           pointList1.add(TimeSeriesDoubleValue(
               new DateTime(time.year, time.month, time.day, time.hour,
                   time.minute, time.second),
-              data[2]));
+              double.parse(data[2].toString())));
           pointList2.add(TimeSeriesDoubleValue(
               new DateTime(time.year, time.month, time.day, time.hour,
                   time.minute, time.second),
-              data[3]));
+              double.parse(data[3].toString())));
         }
         createGraphData();
       } on NoSuchMethodError {
@@ -217,7 +219,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
 
     graphData0.add(new charts.Series<TimeSeriesDoubleValue, DateTime>(
       id: 'y_aix',
-      colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+      colorFn: (_, __) => charts.MaterialPalette.red.shadeDefault,
       domainFn: (TimeSeriesDoubleValue item, _) => item.time,
       measureFn: (TimeSeriesDoubleValue item, _) => item.value,
       data: pointList1,
@@ -225,7 +227,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
 
     graphData0.add(new charts.Series<TimeSeriesDoubleValue, DateTime>(
       id: 'z_axis',
-      colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+      colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
       domainFn: (TimeSeriesDoubleValue item, _) => item.time,
       measureFn: (TimeSeriesDoubleValue item, _) => item.value,
       data: pointList2,
@@ -246,7 +248,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
     }
   }
 
-  _onSelectedChanged(charts.SelectionModel model) {
+    _onSelectedChanged(charts.SelectionModel model) {
     final selectedDatum = model.selectedDatum;
     DateTime time;
     final measures = <String, num>{};
@@ -263,4 +265,6 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
       _measure = measures;
     });
   }
+
+
 }

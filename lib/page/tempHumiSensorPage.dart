@@ -110,8 +110,7 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
                           defaultRenderer: charts.LineRendererConfig(
                               includeArea: true, stacked: true),
                           domainAxis: charts.DateTimeAxisSpec(
-                              tickProviderSpec:
-                                  charts.DateTimeEndPointsTickProviderSpec()),
+                             tickProviderSpec: charts.DateTimeEndPointsTickProviderSpec()),
                           primaryMeasureAxis: new charts.NumericAxisSpec(
                             tickProviderSpec:
                                 new charts.BasicNumericTickProviderSpec(
