@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:thereiot/tool/database.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'package:thereiot/widget/sensorCardWidget.dart';
 import 'package:thereiot/page/sensorManagePage.dart';
@@ -8,6 +7,7 @@ import 'tempSensorPage.dart';
 import 'gyroscopeSensorPage.dart';
 import 'enumSensorPage.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:thereiot/tool/sensorManageTool.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadSensorList() async {
-    DatabaseTool database = new DatabaseTool();
+   /* DatabaseTool database = new DatabaseTool();
     List templist = await database.getSensorList();
     sensorlist.clear();
     templist.forEach((item) => sensorlist.add(SensorEntity.fromMap(item)));
@@ -123,7 +123,14 @@ class _HomePageState extends State<HomePage> {
       print("传感器列表为空");
     }
     setState(() {});
-    await database.close();
+    await database.close();  */
+
+    SensorManageTool sensorManageTool = new SensorManageTool();
+    sensorlist = await sensorManageTool.getSensorList();
+    setState(() {
+      
+    });
+
   }
 
   _refreshSensorList(bool up) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thereiot/tool/database.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
+import 'package:thereiot/tool/sensorManageTool.dart';
 
 class AddSensorPage extends StatefulWidget {
   @override
@@ -12,8 +13,6 @@ class _AddSensorPageState extends State<AddSensorPage> {
   int _roomid;
   String _sensorName;
   String _sensorType;
-  int _fieldNum;
-  String _description;
 
   final _formKey = new GlobalKey<FormState>();
 
@@ -51,12 +50,6 @@ class _AddSensorPageState extends State<AddSensorPage> {
             SizedBox(
               height: 20,
             ),
-            initFieldNum(),
-            SizedBox(
-              height: 20,
-            ),
-            initDescription(),
-            SizedBox(height: 30,),
             initSubmitButton(),
           ],
         ),
@@ -121,19 +114,6 @@ class _AddSensorPageState extends State<AddSensorPage> {
     );
   }
 
-  TextFormField initFieldNum(){
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: 'fieldNum',
-      ),
-      onSaved: (String value)=>_fieldNum = int.parse(value),
-      validator: (String value){
-        if (!RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
-          return 'fieldNum必须为数字';
-        }
-      },
-    );
-  }
 
   TextFormField initSensorType() {
     return TextFormField(
@@ -149,12 +129,6 @@ class _AddSensorPageState extends State<AddSensorPage> {
     );
   }
 
-  TextFormField initDescription() {
-    return TextFormField(
-      decoration: InputDecoration(labelText: 'description'),
-      onSaved: (String value) => _description = value,
-    );
-  }
 
   Center initSubmitButton() {
     return Center(
@@ -168,12 +142,15 @@ class _AddSensorPageState extends State<AddSensorPage> {
             if (_formKey.currentState.validate()) {
               _formKey.currentState.save();
               SensorEntity sensor = new SensorEntity(
-                  _sensorId, _sensorName, _sensorType, _roomid,_fieldNum,
-                  description: _description);
-              DatabaseTool database = new DatabaseTool();
+                  _sensorId, _sensorName, _sensorType, _roomid
+                 );
+            /*  DatabaseTool database = new DatabaseTool();
               int result = await database.insertSensor(sensor);
               print("插入数据库的返回码是:$result");
-              await database.close();
+              await database.close();  */
+
+              SensorManageTool sensorManageTool = new SensorManageTool();
+              await sensorManageTool.addSensor(sensor.toMap());
             }
           },
         ),

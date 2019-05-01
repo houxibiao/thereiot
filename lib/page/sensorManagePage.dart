@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:thereiot/tool/database.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'addSensorPage.dart';
+import 'package:thereiot/tool/sensorManageTool.dart';
 
 class SensorManagePage extends StatefulWidget {
   @override
@@ -9,7 +9,6 @@ class SensorManagePage extends StatefulWidget {
 }
 
 class _SensorManagePageState extends State<SensorManagePage> {
-  
   List<SensorInfoBean> sensorInfoList = new List<SensorInfoBean>();
   int currentIndex = 0;
 
@@ -36,8 +35,7 @@ class _SensorManagePageState extends State<SensorManagePage> {
                 right: 0,
                 bottom: 80,
                 top: 0,
-                child:  ListView(
-                  
+                child: ListView(
                   shrinkWrap: true,
                   children: <Widget>[
                     sensorInfoList.isEmpty
@@ -74,10 +72,6 @@ class _SensorManagePageState extends State<SensorManagePage> {
                                       ),
                                       Text(
                                           "sensorType:${item.sensor.sensorType}"),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Text(item.sensor.description),
                                       SizedBox(
                                         height: 10,
                                       ),
@@ -121,6 +115,7 @@ class _SensorManagePageState extends State<SensorManagePage> {
   }
 
   loadSensorList() async {
+    /*
     DatabaseTool database = new DatabaseTool();
     List templist = await database.getSensorList();
     sensorInfoList.clear();
@@ -131,7 +126,20 @@ class _SensorManagePageState extends State<SensorManagePage> {
       print("传感器列表为空");
     }
     setState(() {});
-    await database.close();
+    await database.close();  */
+
+    SensorManageTool sensorManageTool = new SensorManageTool();
+    List<SensorEntity> sensorlist = new List<SensorEntity>();
+    sensorlist = await sensorManageTool.getSensorList();
+    if (sensorlist.isEmpty) {
+      print("传感器列表为空");
+      sensorInfoList.clear();
+    } else {
+      sensorInfoList.clear();
+      sensorlist
+          .forEach((item) => sensorInfoList.add(SensorInfoBean(item, false)));
+    }
+    setState(() {});
   }
 
   _setCurrentIndex(int index, bool isExpanded) {
@@ -142,15 +150,14 @@ class _SensorManagePageState extends State<SensorManagePage> {
   }
 
   _deleteSensorById(int sensorId) async {
-    DatabaseTool database = new DatabaseTool();
+  /*  DatabaseTool database = new DatabaseTool();
     int result = await database.deleteSensor(sensorId);
     print("删除了一个传感器,返回值:$result");
     await database.close();
-    loadSensorList();
+    loadSensorList();    */
+    SensorManageTool sensorManageTool = new SensorManageTool();
+    await sensorManageTool.deleteSensor(sensorId);
   }
-
-
-
 }
 
 class SensorInfoBean {
