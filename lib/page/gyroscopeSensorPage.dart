@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:thereiot/entity/TimeSeriesDoubleValue.dart';
+import 'package:thereiot/widget/showOptionsWidget.dart';
 
 class GyroscopeSensorPage extends StatefulWidget {
   SensorEntity sensor;
@@ -17,7 +18,8 @@ class GyroscopeSensorPage extends StatefulWidget {
 
 class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
   SensorEntity sensor;
-  String _dashtimeStr;
+  DateTime _dashtime;
+  String _lastOption = "RealTime";
   Timer periodicTimer; //用于执行定时任务
 
   DateTime _selectedPointTime; //用于指示选择的时刻
@@ -35,7 +37,8 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
   void initState() {
     super.initState();
     sensor = widget.sensor;
-    getDataPoints();
+    _dashtime = DateTime.now().add(new Duration(hours: -8));
+    getDataPoints(_dashtime.add(new Duration(minutes: -5)));
     dynamicRefresh();
   }
 
@@ -90,6 +93,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
                   ),
                 ),
               ),
+              ShowOptionsWidget(onChangedFunction, _lastOption),
               SizedBox(
                 //放置第一个曲线图  以后考虑把曲线图分离出去
                 height: 300,
@@ -138,7 +142,8 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
                   scale: 0.85,
                 ),
               ),
-              graphData0.isEmpty
+              GestureDetector(
+                child: graphData0.isEmpty
                   ? Container(
                       child: Center(
                         child: Text("设备离线，请检测网络连接"),
@@ -147,6 +152,12 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: selectShowChildren),
+                onTap: (){
+                  setState(() {
+                   print("页面重载"); 
+                  });
+                },
+              ),
             ],
           ),
         ],
@@ -154,19 +165,22 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
     );
   }
 
-  getDataPoints() async {
+  getDataPoints(DateTime startTime, {String timeperiod}) async {
     //获取指定传感器从该页面打开前2分钟到现在的数据
     DateTime time; //用于解析json数据里面的时间
-    DateTime _dashtime =
-        DateTime.now().add(new Duration(minutes: -2, hours: -8));
-    _dashtimeStr =
-        "${_dashtime.year}-${_dashtime.month.toString().padLeft(2, '0')}-${_dashtime.day.toString().padLeft(2, '0')}T${_dashtime.hour.toString().padLeft(2, '0')}:${_dashtime.minute.toString().padLeft(2, '0')}:${_dashtime.second.toString().padLeft(2, '0')}Z";
+    String qStr;
 
+    String timeStr =
+        "${startTime.year}-${startTime.month.toString().padLeft(2, '0')}-${startTime.day.toString().padLeft(2, '0')}T${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:${startTime.second.toString().padLeft(2, '0')}Z";
+    if (timeperiod == null) {
+      qStr =
+          "SELECT fieldvalue0,fieldvalue1,fieldvalue2,sensorType FROM room34563 where time>='$timeStr' and \"sensorId\" = '${sensor.sensorId}' tz('Asia/Shanghai')";
+    } else {
+      qStr =
+          "SELECT mean(\"fieldvalue0\") AS \"mean_value0\",mean(\"fieldvalue1\") AS \"mean_value1\",mean(\"fieldvalue2\") AS \"mean_value2\" FROM room34563 where time>='$timeStr' and \"sensorId\" = '${sensor.sensorId}' group by time($timeperiod) fill(0) tz('Asia/Shanghai')";
+    }
     var url = "http://123.56.20.55:8086/query?u=hou&p=Hou13734&db=yuntest";
-    var response = await http.post(url, body: {
-      'q':
-          "SELECT fieldvalue0,fieldvalue1,fieldvalue2,sensorType FROM room34563 where time>='$_dashtimeStr' and \"sensorId\" = '${sensor.sensorId}' tz('Asia/Shanghai')"
-    });
+    var response = await http.post(url, body: {'q': qStr});
 
     if (response.statusCode == 200) {
       pointList0.clear();
@@ -180,18 +194,39 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
           print(
               "传感器类型:gyroscope,更新时间: ${data[0]},x轴:${data[1]},y轴:${data[2]},z轴:${data[3]}");
           time = DateTime.parse(data[0].replaceAll("T", " ").substring(0, 19));
-          pointList0.add(TimeSeriesDoubleValue(
-              new DateTime(time.year, time.month, time.day, time.hour,
-                  time.minute, time.second),
-             double.parse(data[1].toString())));
-          pointList1.add(TimeSeriesDoubleValue(
-              new DateTime(time.year, time.month, time.day, time.hour,
-                  time.minute, time.second),
-              double.parse(data[2].toString())));
-          pointList2.add(TimeSeriesDoubleValue(
-              new DateTime(time.year, time.month, time.day, time.hour,
-                  time.minute, time.second),
-              double.parse(data[3].toString())));
+          if (data[1].toString().length > 5) {
+            pointList0.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[1].toString().substring(0, 4))));
+          } else {
+            pointList0.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[1].toString())));
+          }
+          if (data[2].toString().length > 5) {
+            pointList1.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[2].toString().substring(0, 4))));
+          } else {
+            pointList1.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[2].toString())));
+          }
+          if (data[3].toString().length > 5) {
+            pointList2.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[3].toString().substring(0, 4))));
+          } else {
+            pointList2.add(TimeSeriesDoubleValue(
+                new DateTime(time.year, time.month, time.day, time.hour,
+                    time.minute, time.second),
+                double.parse(data[3].toString())));
+          }
         }
         createGraphData();
       } on NoSuchMethodError {
@@ -243,12 +278,12 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
       periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
         DateTime datetime = DateTime.now();
         print("获取新的数据,现在的时间是$datetime");
-        await getDataPoints();
+        await getDataPoints(_dashtime.add(Duration(minutes: -5)));
       });
     }
   }
 
-    _onSelectedChanged(charts.SelectionModel model) {
+  _onSelectedChanged(charts.SelectionModel model) {
     final selectedDatum = model.selectedDatum;
     DateTime time;
     final measures = <String, num>{};
@@ -266,5 +301,59 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
     });
   }
 
+  onChangedFunction(String value) {
+    print("the value is $value");
+    DateTime startTime;
+    if (_lastOption == "RealTime") {
+      periodicTimer.cancel();
+      setState(() {
+        _lastOption = value;
+      });
+      if (value == "OneHour") {
+        startTime = _dashtime.add(Duration(hours: -1));
+        print("获取$value 前的内容");
+        getDataPoints(startTime, timeperiod: "2m");
+      } else if (value == "OneDay") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -1));
+        getDataPoints(startTime, timeperiod: "1h");
+      } else if (value == "OneWeek") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -7));
+        getDataPoints(startTime, timeperiod: "1d");
+      } else {
+        print("_lastOption is RealTime,now is $value");
+      }
+    } else {
+      //上次选择的不是实时动态，不需要取消定时器，如果这次选择的是RealTime,需要重启计时器
+      setState(() {
+        _lastOption = value;
+      });
+      if (value == "RealTime") {
+        print("获取$value 前的内容");
+        getDataPoints(_dashtime.add(Duration(minutes: -5)));
+       // dynamicRefresh();
+       periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
+        DateTime datetime = DateTime.now();
+        print("获取新的数据,现在的时间是$datetime");
+        await getDataPoints(_dashtime.add(Duration(minutes: -5)));
+      });
+      } else if (value == "OneHour") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(hours: -1));
+        getDataPoints(startTime, timeperiod: "2m");
+      } else if (value == "OneDay") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -1));
+        getDataPoints(startTime, timeperiod: "1h");
+      } else if (value == "OneWeek") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -7));
+        getDataPoints(startTime, timeperiod: "1d");
+      } else {
+        print("_lastOption is RealTime,now is $value");
+      }
+    }
+  }
 
 }

@@ -4,7 +4,8 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'package:thereiot/entity/TimeSeriesIntValue.dart';
+import 'package:thereiot/entity/TimeSeriesDoubleValue.dart';
+import 'package:thereiot/widget/showOptionsWidget.dart';
 
 class TempHumiSensorPage extends StatefulWidget {
   SensorEntity sensor;
@@ -17,26 +18,28 @@ class TempHumiSensorPage extends StatefulWidget {
 
 class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
   SensorEntity sensor;
-  String _dashtimeStr;
+  DateTime _dashtime;
+  String _lastOption = "RealTime";
   Timer periodicTimer; //用于执行定时任务
 
   var mapTemp = {'time': " ", "temp": 0};
   var mapHumi = {'time': " ", "humi": 0};
 
-  List<TimeSeriesIntValue> pointList0 = new List<TimeSeriesIntValue>();
-  List<TimeSeriesIntValue> pointList1 = new List<TimeSeriesIntValue>();
+  List<TimeSeriesDoubleValue> pointList0 = new List<TimeSeriesDoubleValue>();
+  List<TimeSeriesDoubleValue> pointList1 = new List<TimeSeriesDoubleValue>();
 
-  List<charts.Series<TimeSeriesIntValue, DateTime>> graphData0 =
-      new List<charts.Series<TimeSeriesIntValue, DateTime>>();
+  List<charts.Series<TimeSeriesDoubleValue, DateTime>> graphData0 =
+      new List<charts.Series<TimeSeriesDoubleValue, DateTime>>();
 
-  List<charts.Series<TimeSeriesIntValue, DateTime>> graphData1 =
-      new List<charts.Series<TimeSeriesIntValue, DateTime>>();
+  List<charts.Series<TimeSeriesDoubleValue, DateTime>> graphData1 =
+      new List<charts.Series<TimeSeriesDoubleValue, DateTime>>();
 
   @override
   void initState() {
     super.initState();
     sensor = widget.sensor;
-    getDataPoints();
+    _dashtime = DateTime.now().add(new Duration(hours: -8));
+    getDataPoints(_dashtime.add(new Duration(minutes: -5)));
     dynamicRefresh();
   }
 
@@ -89,6 +92,7 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
                   ),
                 ),
               ),
+              ShowOptionsWidget(onChangedFunction, _lastOption),
               SizedBox(
                 //放置第一个曲线图  以后考虑把曲线图分离出去
                 height: 300,
@@ -110,7 +114,8 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
                           defaultRenderer: charts.LineRendererConfig(
                               includeArea: true, stacked: true),
                           domainAxis: charts.DateTimeAxisSpec(
-                             tickProviderSpec: charts.DateTimeEndPointsTickProviderSpec()),
+                              tickProviderSpec:
+                                  charts.DateTimeEndPointsTickProviderSpec()),
                           primaryMeasureAxis: new charts.NumericAxisSpec(
                             tickProviderSpec:
                                 new charts.BasicNumericTickProviderSpec(
@@ -194,7 +199,8 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
                   scale: 0.85,
                 ),
               ),
-              pointList1.isEmpty
+              GestureDetector(
+                child: pointList1.isEmpty
                   ? SizedBox(
                       height: 20,
                     )
@@ -205,6 +211,12 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
                         Text("湿度:${mapHumi['humi']}%")
                       ],
                     ),
+                    onTap: (){
+                      setState(() {
+                        print("重载页面");
+                      });
+                    },
+              ),
             ],
           ),
         ],
@@ -212,19 +224,24 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
     );
   }
 
-  getDataPoints() async {
+  getDataPoints(DateTime startTime, {String timeperiod}) async {
     //获取指定传感器从该页面打开前2分钟到现在的数据
     DateTime time; //用于解析json数据里面的时间
-    DateTime _dashtime =
-        DateTime.now().add(new Duration(minutes: -3, hours: -8));
-    _dashtimeStr =
-        "${_dashtime.year}-${_dashtime.month.toString().padLeft(2, '0')}-${_dashtime.day.toString().padLeft(2, '0')}T${_dashtime.hour.toString().padLeft(2, '0')}:${_dashtime.minute.toString().padLeft(2, '0')}:${_dashtime.second.toString().padLeft(2, '0')}Z";
+
+    String qStr;
+
+    String timeStr =
+        "${startTime.year}-${startTime.month.toString().padLeft(2, '0')}-${startTime.day.toString().padLeft(2, '0')}T${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:${startTime.second.toString().padLeft(2, '0')}Z";
+    if (timeperiod == null) {
+      qStr =
+          "SELECT fieldvalue0,fieldvalue1,fieldvalue2,sensorType FROM room34563 where time>='$timeStr' and \"sensorId\" = '${sensor.sensorId}' tz('Asia/Shanghai')";
+    } else {
+      qStr =
+          "SELECT mean(\"fieldvalue0\") AS \"mean_value0\",mean(\"fieldvalue1\") AS \"mean_value1\",mean(\"fieldvalue2\") AS \"mean_value2\" FROM room34563 where time>='$timeStr' and \"sensorId\" = '${sensor.sensorId}' group by time($timeperiod) fill(0) tz('Asia/Shanghai')";
+    }
 
     var url = "http://123.56.20.55:8086/query?u=hou&p=Hou13734&db=yuntest";
-    var response = await http.post(url, body: {
-      'q':
-          "SELECT fieldvalue0,fieldvalue1,fieldvalue2,sensorType FROM room34563 where time>='$_dashtimeStr' and \"sensorId\" = '${sensor.sensorId}' tz('Asia/Shanghai')"
-    });
+    var response = await http.post(url, body: {'q': qStr});
 
     if (response.statusCode == 200) {
       pointList0.clear();
@@ -237,14 +254,29 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
           print(
               "传感器类型:temp_humi,更新时间: ${data[0]},温度:${data[1]},湿度:${data[2]}%");
           time = DateTime.parse(data[0].replaceAll("T", " ").substring(0, 19));
-          pointList0.add(TimeSeriesIntValue(
+          if(data[1].toString().length>5){
+              pointList0.add(TimeSeriesDoubleValue(
               new DateTime(time.year, time.month, time.day, time.hour,
                   time.minute, time.second),
-              data[1]));
-          pointList1.add(TimeSeriesIntValue(
+              double.parse(data[1].toString().substring(0,4))));
+          }else{
+            pointList0.add(TimeSeriesDoubleValue(
               new DateTime(time.year, time.month, time.day, time.hour,
                   time.minute, time.second),
-              data[2]));
+              double.parse(data[1].toString())));
+          }
+          if(data[2].toString().length>5){
+              pointList1.add(TimeSeriesDoubleValue(
+              new DateTime(time.year, time.month, time.day, time.hour,
+                  time.minute, time.second),
+              double.parse(data[2].toString().substring(0,4))));
+          }else{
+            pointList1.add(TimeSeriesDoubleValue(
+              new DateTime(time.year, time.month, time.day, time.hour,
+                  time.minute, time.second),
+              double.parse(data[2].toString())));
+          }
+          
         }
         createGraphData();
       } on NoSuchMethodError {
@@ -263,18 +295,18 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
     graphData0.clear();
     graphData1.clear();
 
-    graphData0.add(new charts.Series<TimeSeriesIntValue, DateTime>(
+    graphData0.add(new charts.Series<TimeSeriesDoubleValue, DateTime>(
       id: 'temperature',
       colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-      domainFn: (TimeSeriesIntValue item, _) => item.time,
-      measureFn: (TimeSeriesIntValue item, _) => item.value,
+      domainFn: (TimeSeriesDoubleValue item, _) => item.time,
+      measureFn: (TimeSeriesDoubleValue item, _) => item.value,
       data: pointList0,
     ));
-    graphData1.add(new charts.Series<TimeSeriesIntValue, DateTime>(
+    graphData1.add(new charts.Series<TimeSeriesDoubleValue, DateTime>(
       id: 'humidity',
       colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
-      domainFn: (TimeSeriesIntValue item, _) => item.time,
-      measureFn: (TimeSeriesIntValue item, _) => item.value,
+      domainFn: (TimeSeriesDoubleValue item, _) => item.time,
+      measureFn: (TimeSeriesDoubleValue item, _) => item.value,
       data: pointList1,
     ));
 
@@ -285,11 +317,14 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
 
   dynamicRefresh() async {
     if (periodicTimer == null) {
+      print("建立定时器");
       periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
         DateTime datetime = DateTime.now();
         print("获取新的数据,现在的时间是$datetime");
-        await getDataPoints();
+        await getDataPoints(_dashtime.add(Duration(minutes: -5)));
       });
+    }else{
+      print("计数器已存在");
     }
   }
 
@@ -310,5 +345,60 @@ class _TempHumiSensorPageState extends State<TempHumiSensorPage> {
       mapHumi['humi'] = selectedDatum.first.datum.value;
     }
     setState(() {});
+  }
+
+  onChangedFunction(String value) {
+    print("the value is $value");
+    DateTime startTime;
+    if (_lastOption == "RealTime") {
+      periodicTimer.cancel();
+      setState(() {
+        _lastOption = value;
+      });
+      if (value == "OneHour") {
+        startTime = _dashtime.add(Duration(hours: -1));
+        print("获取$value 前的内容");
+        getDataPoints(startTime, timeperiod: "2m");
+      } else if (value == "OneDay") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -1));
+        getDataPoints(startTime, timeperiod: "1h");
+      } else if (value == "OneWeek") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -7));
+        getDataPoints(startTime, timeperiod: "1d");
+      } else {
+        print("_lastOption is RealTime,now is $value");
+      }
+    } else {
+      //上次选择的不是实时动态，不需要取消定时器，如果这次选择的是RealTime,需要重启计时器
+      setState(() {
+        _lastOption = value;
+      });
+      if (value == "RealTime") {
+        print("获取$value 前的内容");
+        getDataPoints(_dashtime.add(Duration(minutes: -5)));
+       // dynamicRefresh();
+       periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
+        DateTime datetime = DateTime.now();
+        print("获取新的数据,现在的时间是$datetime");
+        await getDataPoints(_dashtime.add(Duration(minutes: -5)));
+      });
+      } else if (value == "OneHour") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(hours: -1));
+        getDataPoints(startTime, timeperiod: "2m");
+      } else if (value == "OneDay") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -1));
+        getDataPoints(startTime, timeperiod: "1h");
+      } else if (value == "OneWeek") {
+        print("获取$value 前的内容");
+        startTime = _dashtime.add(Duration(days: -7));
+        getDataPoints(startTime, timeperiod: "1d");
+      } else {
+        print("_lastOption is RealTime,now is $value");
+      }
+    }
   }
 }

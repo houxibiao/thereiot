@@ -36,7 +36,8 @@ class _SensorManagePageState extends State<SensorManagePage> {
                 right: 0,
                 bottom: 80,
                 top: 0,
-                child: ListView(
+                child:  ListView(
+                  
                   shrinkWrap: true,
                   children: <Widget>[
                     sensorInfoList.isEmpty
@@ -147,6 +148,9 @@ class _SensorManagePageState extends State<SensorManagePage> {
     await database.close();
     loadSensorList();
   }
+
+
+
 }
 
 class SensorInfoBean {

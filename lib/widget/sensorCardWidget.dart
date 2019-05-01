@@ -13,7 +13,6 @@ Card SensorCardWidget(SensorEntity sensor) {
             "assets/${sensor.sensorType}.png",
             width: 60,
             height: 60,
-            //fit: BoxFit.fitWidth,
           ),
         ),
         Expanded(

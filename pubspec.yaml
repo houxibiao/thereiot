@@ -11,7 +11,7 @@ description: A new Flutter project.
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.1
+version: 1.1.0
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
@@ -28,8 +28,9 @@ dependencies:
   path_provider: ^0.5.0+1
   charts_flutter: ^0.6.0
   intl: ^0.15.8
-  loading: ^1.0.0
   liquid_pull_to_refresh: ^1.1.0
+  pull_to_refresh: ^1.2.0
+
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +63,7 @@ flutter:
     - assets/switch.png
     - assets/temp_humi.png
     - assets/temperature.png
+    - assets/light.png
     - assets/background.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see

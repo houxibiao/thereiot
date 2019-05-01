@@ -6,7 +6,8 @@ import 'package:thereiot/page/sensorManagePage.dart';
 import 'tempHumiSensorPage.dart';
 import 'tempSensorPage.dart';
 import 'gyroscopeSensorPage.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'enumSensorPage.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,10 +16,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<SensorEntity> sensorlist = new List<SensorEntity>();
+  RefreshController _refreshController = new RefreshController();
 
   @override
   void initState() {
     super.initState();
+
     _loadSensorList();
   }
 
@@ -40,9 +43,12 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: LiquidPullToRefresh(
-        backgroundColor: Color.fromRGBO(227, 242, 253, 40),
+      body: SmartRefresher(
+        // backgroundColor: Color.fromRGBO(227, 242, 253, 40),
+        controller: _refreshController,
         onRefresh: _refreshSensorList,
+        enablePullDown: true,
+        enablePullUp: false,
         child: sensorlist.isEmpty
             ? ListView(
                 children: <Widget>[
@@ -89,6 +95,14 @@ class _HomePageState extends State<HomePage> {
                                 new GyroscopeSensorPage(sensor: item),
                           ),
                         );
+                      } else if (item.sensorType == "light") {
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                new EnumSensorPage(sensor: item),
+                          ),
+                        );
                       } else {
                         print("未添加类型");
                       }
@@ -112,7 +126,14 @@ class _HomePageState extends State<HomePage> {
     await database.close();
   }
 
-  Future<void> _refreshSensorList() async {
-    await _loadSensorList();
+  _refreshSensorList(bool up) async {
+    _loadSensorList();
+    if (up) {
+      new Future.delayed(Duration(microseconds: 2000)).then((val) {
+        _refreshController.sendBack(true, RefreshStatus.completed);
+      });
+    } else {
+      _refreshController.sendBack(true, RefreshStatus.noMore);
+    }
   }
 }
