@@ -22,6 +22,8 @@ class _TempSensorPageState extends State<TempSensorPage> {
   Timer periodicTimer; //用于执行定时任务
   String _lastOption = "RealTime";
   var mapTemp = {'time': " ", "temp": 0};
+  String newestValue = "";
+  bool onlineState = false;
 
   List<TimeSeriesDoubleValue> pointList0 = new List<TimeSeriesDoubleValue>();
   List<TimeSeriesDoubleValue> tempList0 = new List<TimeSeriesDoubleValue>();
@@ -70,11 +72,29 @@ class _TempSensorPageState extends State<TempSensorPage> {
                   ),
                 ),
               ),
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text("状态:"),
+                  onlineState == true
+                      ? Icon(
+                          Icons.import_export,
+                          color: Colors.green,
+                        )
+                      : Icon(
+                          Icons.import_export,
+                          color: Colors.black45,
+                        )
+                ],
+              ),
               Padding(
                 padding: EdgeInsets.all(10),
                 child: Center(
                   child: Text(
-                    pointList0.isEmpty ? "__" : "${pointList0.last.value} C",
+                    onlineState? newestValue : "__",
                     style: TextStyle(fontSize: 20, color: Colors.white70),
                   ),
                 ),
@@ -120,8 +140,7 @@ class _TempSensorPageState extends State<TempSensorPage> {
                 ),
               ),
                 
-            GestureDetector(
-              child: graphData0.isEmpty
+             graphData0.isEmpty
                   ? Container(
                       child: Center(
                         child: Text("设备离线，请检测网络连接"),
@@ -134,13 +153,17 @@ class _TempSensorPageState extends State<TempSensorPage> {
                        mapTemp['temp'].toString().length>5? Text("温度:${mapTemp['temp'].toString().substring(0,5)}"):
                         Text("温度:${mapTemp['temp']}"),
                       ],
-                    ),  
-              onTap: (){
-                setState(() {
-                  print("重载画面");
-                });
-              },
-            ),
+                    ), 
+              Center(
+                child: RaisedButton(
+                  child: Text("刷新"),
+                  onPressed: (){
+                    setState(() {
+                      
+                    });
+                  },
+                ),
+              ),
             ],
           ),
         ],
@@ -186,6 +209,17 @@ class _TempSensorPageState extends State<TempSensorPage> {
         }
         pointList0.clear();
         pointList0.addAll(tempList0);
+           //获取最新值和在线状态
+        if (timeperiod == null) {
+          //该判断为真，表明现在是在获取实时数据
+          newestValue = pointList0.last.value.toString();
+          if (DateTime.now().difference(pointList0.last.time) >
+              Duration(minutes: 5)) {
+            onlineState = false;
+          } else {
+            onlineState = true;
+          }
+        }
         createGraphData();
       } on NoSuchMethodError {
         print("设备离线，获取不到数据");

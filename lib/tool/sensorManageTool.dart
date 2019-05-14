@@ -1,18 +1,19 @@
-
 import 'dart:io';
-
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'package:dio/dio.dart';
 
 class SensorManageTool {
   Future<List<SensorEntity>> getSensorList() async {
+
+    Dio dio = new Dio();
     List<SensorEntity> sensorlist = new List<SensorEntity>();
+
     var url = "http://123.56.20.55:8082/sensors/getSensors";
-    var response = await http.get(url);
+
+    Response response = await dio.get(url);  // var response = await http.get(url);
     if (response.statusCode == 200) {
-      Map<String, dynamic> result = json.decode(response.body);
+
+      Map<String, dynamic> result = response.data;
 
       try {
         for (dynamic item in result["sensors"]) {
@@ -44,20 +45,36 @@ class SensorManageTool {
     }
   }
 
-  Future<void> addSensor(Map<String,dynamic> sensorMap) async{
+  Future<String> addSensor(Map<String,dynamic> sensorMap) async{
 
     Dio dio = new Dio();
-
+    Response response;
     var url = "http://123.56.20.55:8082/sensors/addSensor";
 
     try{
-      Response response = await dio.post(url,data:sensorMap,options: Options(contentType: ContentType.json));
+      response = await dio.post(url,data:sensorMap,options: Options(contentType: ContentType.json));
       print(response.data);
+      return response.data.toString();
     }catch(e){
       print(e);
-    }finally{
-      print("添加任务完成");
-    }
+      return e.toString();
+    }  
+  }
+
+  Future<String> modifySensor(Map<String,dynamic> sensorMap) async{
+
+    Dio dio = new Dio();
+    Response response;
+    var url = "http://123.56.20.55:8082/sensors/modifySensor";
+
+    try{
+      response = await dio.post(url,data:sensorMap,options: Options(contentType: ContentType.json));
+      print(response.data);
+      return response.data.toString();
+    }catch(e){
+      print(e);
+      return e.toString();
+    }  
   }
 
 }

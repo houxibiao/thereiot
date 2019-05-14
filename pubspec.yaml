@@ -14,7 +14,7 @@ description: A new Flutter project.
 version: 1.1.0
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -29,7 +29,7 @@ dependencies:
   charts_flutter: ^0.6.0
   intl: ^0.15.8
   pull_to_refresh: ^1.2.0
-  dio: 2.1.3
+  dio: 2.1.0
 
 
 dev_dependencies:
@@ -60,7 +60,7 @@ flutter:
     - assets/humidity.png
     - assets/other.png
     - assets/pm25.png
-    - assets/switch.png
+    - assets/buttonwithvalue.png
     - assets/temp_humi.png
     - assets/temperature.png
     - assets/light.png

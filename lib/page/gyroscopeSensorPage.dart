@@ -50,14 +50,16 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectShowChildren = <Widget>[];
+
+
+    List<Widget> selectShowChildren = <Widget>[];
     if (_selectedPointTime != null) {
       selectShowChildren.add(Text("时间:$_selectedPointTime"));
     }
 
-    _measure?.forEach((String name, num value) {
-      selectShowChildren.add(new Text('$name : $value'));
-    });
+    /* _measure.forEach((String name, num value) {
+            selectShowChildren.add(new Text('$name : $value'));
+          });      */
 
     return Scaffold(
       body: Stack(
@@ -124,15 +126,15 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
                                     dataIsInWholeNumbers: false,
                                     desiredTickCount: 5),
                           ),
-                          selectionModels: [
+                           selectionModels: [
                             new charts.SelectionModelConfig(
                               type: charts.SelectionModelType.info,
                               changedListener: _onSelectedChanged,
                             ),
-                          ],
+                          ],    
                           behaviors: [
                             new charts.ChartTitle(
-                              '温度趋势图',
+                              '数据趋势图',
                               behaviorPosition: charts.BehaviorPosition.bottom,
                               titleOutsideJustification:
                                   charts.OutsideJustification.middleDrawArea,
@@ -142,21 +144,20 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
                   scale: 0.85,
                 ),
               ),
-              GestureDetector(
-                child: graphData0.isEmpty
+              graphData0.isEmpty
                   ? Container(
                       child: Center(
                         child: Text("设备离线，请检测网络连接"),
                       ),
                     )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: selectShowChildren),
-                onTap: (){
-                  setState(() {
-                   print("页面重载"); 
-                  });
-                },
+                  : Container(
+                      height: 20,
+                    ),
+              Center(
+                child: RaisedButton(
+                  child: Text("刷新"),
+                  onPressed: () => {setState(() {})},
+                ),
               ),
             ],
           ),
@@ -166,6 +167,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
   }
 
   getDataPoints(DateTime startTime, {String timeperiod}) async {
+    
     //获取指定传感器从该页面打开前2分钟到现在的数据
     DateTime time; //用于解析json数据里面的时间
     String qStr;
@@ -242,6 +244,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
   }
 
   createGraphData() {
+
     graphData0.clear();
 
     graphData0.add(new charts.Series<TimeSeriesDoubleValue, DateTime>(
@@ -298,6 +301,7 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
     setState(() {
       _selectedPointTime = time;
       _measure = measures;
+      print("_measure: $_measure");
     });
   }
 
@@ -332,12 +336,12 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
       if (value == "RealTime") {
         print("获取$value 前的内容");
         getDataPoints(_dashtime.add(Duration(minutes: -5)));
-       // dynamicRefresh();
-       periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
-        DateTime datetime = DateTime.now();
-        print("获取新的数据,现在的时间是$datetime");
-        await getDataPoints(_dashtime.add(Duration(minutes: -5)));
-      });
+        // dynamicRefresh();
+        periodicTimer = Timer.periodic(Duration(seconds: 15), (as) async {
+          DateTime datetime = DateTime.now();
+          print("获取新的数据,现在的时间是$datetime");
+          await getDataPoints(_dashtime.add(Duration(minutes: -5)));
+        });
       } else if (value == "OneHour") {
         print("获取$value 前的内容");
         startTime = _dashtime.add(Duration(hours: -1));
@@ -355,5 +359,4 @@ class _GyroscopeSensorPageState extends State<GyroscopeSensorPage> {
       }
     }
   }
-
 }

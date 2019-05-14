@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:thereiot/entity/sensorEntity.dart';
 import 'package:thereiot/tool/sensorManageTool.dart';
 
-class AddSensorPage extends StatefulWidget {
+class ModifySensorPage extends StatefulWidget {
+
+  SensorEntity sensor;
+
+  ModifySensorPage({Key key,@required this.sensor}):super(key:key);
+
   @override
-  _AddSensorPageState createState() => _AddSensorPageState();
+  _ModifySensorPageState createState() => _ModifySensorPageState();
 }
 
-class _AddSensorPageState extends State<AddSensorPage> {
+class _ModifySensorPageState extends State<ModifySensorPage> {
+
+  SensorEntity sensor;
   int _sensorId;
   int _roomid;
   int _fieldNum;
@@ -16,14 +23,22 @@ class _AddSensorPageState extends State<AddSensorPage> {
   String _fieldNames;
   String _valuePrecison;
 
-  final _formKey = new GlobalKey<FormState>();
+   final _formKey = new GlobalKey<FormState>();
   TextEditingController textEditingController = new TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  void initState(){
+    super.initState();
+    sensor = widget.sensor;
+    _fieldNum = sensor.fieldNum;
+    _sensorId = sensor.sensorId;
+  }
+
+  @override
+   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("添加传感器"),
+        title: Text("编辑传感器"),
       ),
       backgroundColor: Colors.white,
       body: Builder(
@@ -106,20 +121,9 @@ class _AddSensorPageState extends State<AddSensorPage> {
     );
   }
 
-
-  TextFormField initSensorId() {
-    return TextFormField(
-      onSaved: (String value) => _sensorId = int.parse(value),
-      decoration: InputDecoration(
-        labelText: 'sensorId',
-        border: InputBorder.none,
-      ),
-      keyboardType: TextInputType.numberWithOptions(),
-      validator: (String value) {
-        if (!RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
-          return 'id必须为数字';
-        }
-      },
+Widget initSensorId() {
+    return Container(
+      child: Text("传感器ID: ${sensor.sensorId}"),
     );
   }
 
@@ -129,6 +133,8 @@ class _AddSensorPageState extends State<AddSensorPage> {
         labelText: 'sensorName',
         border: InputBorder.none,
       ),
+
+      initialValue: sensor.sensorName,
       onSaved: (String value) => _sensorName = value,
       validator: (String value) {
         if (value.isEmpty) {
@@ -144,6 +150,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
         labelText: 'Room',
         border: InputBorder.none,
       ),
+      initialValue: sensor.parentRoom.toString(),
       onSaved: (String value) => _roomid = int.parse(value),
       validator: (String value) {
         if (!RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
@@ -159,6 +166,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
         labelText: 'sensorType',
         border: InputBorder.none,
       ),
+      initialValue: sensor.sensorType,
       onSaved: (String value) => _sensorType = value,
       validator: (String value) {
         if (value.isEmpty) {
@@ -168,17 +176,11 @@ class _AddSensorPageState extends State<AddSensorPage> {
     );
   }
 
-  TextField initFieldNum() {
-    return TextField(
-      controller: textEditingController,
-      decoration: InputDecoration(
-        labelText: '参数数量',
-        hintText: '请输入参数数量',
-        border: InputBorder.none,
-      ),
-      keyboardType: TextInputType.numberWithOptions(),
-      onChanged: (String value) => _fieldNum = int.parse(value),
-    );
+  Widget initFieldNum() {
+    return Container(child: 
+    Text(
+      "参数数量:${sensor.fieldNum}"
+    ),);
   }
 
   TextFormField initFieldNames() {
@@ -188,6 +190,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
         hintText: '以逗号分隔开',
         border: InputBorder.none,
       ),
+      initialValue: sensor.fieldNames,
       onSaved: (String value) => _fieldNames = value,
       validator: (String value) {
         if (value.isEmpty) {
@@ -206,6 +209,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
         hintText: '以逗号分隔开',
         border: InputBorder.none,
       ),
+      initialValue: sensor.valuePrecison,
       onSaved: (String value) => _valuePrecison = value,
       validator: (String value) {
         if (value.isEmpty) {
@@ -234,7 +238,7 @@ class _AddSensorPageState extends State<AddSensorPage> {
               print("插入数据库的返回码是:$result");
               await database.close();  */
               SensorManageTool sensorManageTool = new SensorManageTool();
-              String result = await sensorManageTool.addSensor(sensor.toMap());
+              String result = await sensorManageTool.modifySensor(sensor.toMap());
               final snackBar = new SnackBar(
                 content: Text(result),
                 backgroundColor: Colors.lightBlue,
@@ -246,4 +250,5 @@ class _AddSensorPageState extends State<AddSensorPage> {
       ),
     );
   }
+
 }

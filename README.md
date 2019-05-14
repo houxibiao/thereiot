@@ -2,14 +2,8 @@
 
 一个物联网APP
 
-## Getting Started
+## 进度
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-
-
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+1. 添加了历史预览曲线图
+2. 将数据库放在云端，配合restful api管理传感器
+3. Release版不能获取到传感器，也不能添加和删除

@@ -6,8 +6,10 @@ import 'tempHumiSensorPage.dart';
 import 'tempSensorPage.dart';
 import 'gyroscopeSensorPage.dart';
 import 'enumSensorPage.dart';
+import 'otherSensorPage.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:thereiot/tool/sensorManageTool.dart';
+import 'package:thereiot/page/buttonWithValuePage.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,13 +17,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  
   List<SensorEntity> sensorlist = new List<SensorEntity>();
   RefreshController _refreshController = new RefreshController();
 
   @override
   void initState() {
     super.initState();
-
     _loadSensorList();
   }
 
@@ -44,7 +46,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SmartRefresher(
-        // backgroundColor: Color.fromRGBO(227, 242, 253, 40),
         controller: _refreshController,
         onRefresh: _refreshSensorList,
         enablePullDown: true,
@@ -92,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                           context,
                           new MaterialPageRoute(
                             builder: (BuildContext context) =>
-                                new GyroscopeSensorPage(sensor: item),
+                               new GyroscopeSensorPage(sensor: item,)// new GyroscopeSensorPage(sensor: item),
                           ),
                         );
                       } else if (item.sensorType == "light") {
@@ -100,11 +101,19 @@ class _HomePageState extends State<HomePage> {
                           context,
                           new MaterialPageRoute(
                             builder: (BuildContext context) =>
-                                new EnumSensorPage(sensor: item),
+                             new EnumSensorPage(sensor: item),
                           ),
                         );
+                      }else if(item.sensorType =="buttonwithvalue"){
+                        showDialog(context: context,builder: (ctx)=>ButtonWithValuePage(sensor: item,));
                       } else {
-                        print("未添加类型");
+                        Navigator.push(
+                          context,
+                          new MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                               new OtherSensorManage(sensor: item,)
+                          ),
+                        );
                       }
                     },
                   );
@@ -124,7 +133,6 @@ class _HomePageState extends State<HomePage> {
     }
     setState(() {});
     await database.close();  */
-
     SensorManageTool sensorManageTool = new SensorManageTool();
     sensorlist = await sensorManageTool.getSensorList();
     setState(() {
