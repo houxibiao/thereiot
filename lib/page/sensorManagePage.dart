@@ -32,7 +32,7 @@ class _SensorManagePageState extends State<SensorManagePage> {
           ],
         ),
 
-        body: ConstrainedBox(
+        body: ConstrainedBox(   
           constraints: BoxConstraints.expand(),
           child: Stack(
             fit: StackFit.expand,
